@@ -1,0 +1,84 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+import joblib
+import pandas as pd
+
+# Initialize FastAPI application
+app = FastAPI(title="StartupCoach API", description="API for predicting startup success based on funding data.")
+
+# Load the trained model and feature list
+model = joblib.load("models/startup_success_model.pkl")
+model_features = joblib.load("models/model_features.pkl")
+
+# Define input data model for prediction
+class StartupInput(BaseModel):
+    funding_total_usd: float
+    funding_rounds: float
+    founded_year: float
+    seed: float = 0
+    venture: float = 0
+    debt_financing: float = 0
+    angel: float = 0
+    grant: float = 0
+    round_A: float = 0
+    round_B: float = 0
+    round_C: float = 0
+    round_D: float = 0
+    round_E: float = 0
+    round_F: float = 0
+    market: str = "Other"
+    country_code: str = "Other"
+
+# Define input data model for chat endpoint
+class ChatInput(BaseModel):
+    message: str
+
+# Define API endpoints
+@app.get("/")
+def root():
+    return {"message": "StartupCoach API is running"}
+
+# Endpoint to predict startup success based on input data
+@app.post("/predict")
+def predict_startup(data: StartupInput):
+    startup_data = data.model_dump() # Convert Pydantic model to dictionary
+
+    market = startup_data.pop("market") 
+    country_code = startup_data.pop("country_code")
+
+    input_df = pd.DataFrame([startup_data]) # Create DataFrame from input data
+
+    market_col = f"market_{market}"
+    country_col = f"country_code_{country_code}"
+
+    input_df[market_col] = True 
+    input_df[country_col] = True
+
+    # Ensure all model features are present in the input DataFrame
+    for col in model_features:
+        if col not in input_df.columns:
+            input_df[col] = 0
+
+    # Reorder columns to match model features
+    input_df = input_df[model_features]
+
+    # Predict success probability and class
+    probability = model.predict_proba(input_df)[0][1]
+    prediction = model.predict(input_df)[0]
+
+    # Return the prediction results
+    return {
+        "success_probability": round(float(probability), 4),
+        "success_percentage": f"{probability:.2%}",
+        "prediction": "Success" if prediction == 1 else "Failure"
+    }
+
+# Endpoint for chat interactions
+@app.post("/chat")
+def chat(data: ChatInput):
+    return {
+        "response": f"You said: {data.message}",
+        "homework": [
+            "Validate your startup idea with 3 potential customers"
+        ]
+    }
