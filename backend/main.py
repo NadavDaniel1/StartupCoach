@@ -51,6 +51,13 @@ def predict_startup(data: StartupInput):
     market_col = f"market_{market}"
     country_col = f"country_code_{country_code}"
 
+    # Fallback for unseen categories
+    if market_col not in model_features:
+        market_col = "market_Other"
+    
+    if country_col not in model_features:
+        country_col = "country_code_Other"
+
     input_df[market_col] = True 
     input_df[country_col] = True
 
