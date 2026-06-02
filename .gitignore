@@ -6,3 +6,7 @@ __pycache__/
 
 .env
 *.pkl
+
+rag/books/
+
+venv/
