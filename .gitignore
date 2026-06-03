@@ -8,5 +8,6 @@ __pycache__/
 *.pkl
 
 rag/books/
+rag/chunks/
 
 venv/
