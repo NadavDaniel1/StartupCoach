@@ -3,6 +3,8 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd
 
+from rag.generate_answer import generate_answer
+
 # Initialize FastAPI application
 app = FastAPI(title="StartupCoach API", description="API for predicting startup success based on funding data.")
 
@@ -83,9 +85,19 @@ def predict_startup(data: StartupInput):
 # Endpoint for chat interactions
 @app.post("/chat")
 def chat(data: ChatInput):
-    return {
-        "response": f"You said: {data.message}",
-        "homework": [
-            "Validate your startup idea with 3 potential customers"
-        ]
-    }
+    try:
+        answer = generate_answer(data.message)
+
+        return {
+            "response": answer,
+            "homework": [
+                "Talk to 3 potential customers and ask about their current problem, not about your solution."
+            ]
+        }
+
+    except Exception as error:
+        return {
+            "response": "Sorry, StartupCoach could not generate an answer right now. Please try again later.",
+            "error": str(error),
+            "homework": []
+        }

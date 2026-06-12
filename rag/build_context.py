@@ -1,5 +1,4 @@
-from semantic_retrieve import semantic_retrieve
-
+from rag.semantic_retrieve import semantic_retrieve
 
 def build_context(query: str, top_k: int = 3) -> str:
     """
