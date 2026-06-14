@@ -63,13 +63,13 @@ for case in test_cases:
         if col not in input_df.columns:
             input_df[col] = 0
 
-# Reorder columns to match model features
-input_df = input_df[model_features]
+    # Reorder columns to match model features
+    input_df = input_df[model_features]
 
-# Make predictions
-probability = model.predict_proba(input_df)[0][1]
-prediction = model.predict(input_df)[0]
+    # Make predictions
+    probability = model.predict_proba(input_df)[0][1]
+    prediction = model.predict(input_df)[0]
     
-print(f"\n{case['name']}")
-print(f"Success probability: {probability:.2%}")
-print(f"Prediction: {'Success' if prediction == 1 else 'Failure'}")
+    print(f"\n{case['name']}")
+    print(f"Success probability: {probability:.2%}")
+    print(f"Prediction: {'Success' if prediction == 1 else 'Failure'}")

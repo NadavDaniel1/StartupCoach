@@ -4,6 +4,7 @@ import joblib
 import pandas as pd
 
 from rag.generate_answer import generate_answer
+from backend.supabase_client import save_prediction_log
 
 # Initialize FastAPI application
 app = FastAPI(title="StartupCoach API", description="API for predicting startup success based on funding data.")
@@ -43,12 +44,15 @@ def root():
 # Endpoint to predict startup success based on input data
 @app.post("/predict")
 def predict_startup(data: StartupInput):
-    startup_data = data.model_dump() # Convert Pydantic model to dictionary
+    startup_data = data.model_dump()
 
-    market = startup_data.pop("market") 
+    # Keep original input for logging before transforming it for the model
+    original_input = startup_data.copy()
+
+    market = startup_data.pop("market")
     country_code = startup_data.pop("country_code")
 
-    input_df = pd.DataFrame([startup_data]) # Create DataFrame from input data
+    input_df = pd.DataFrame([startup_data])
 
     market_col = f"market_{market}"
     country_col = f"country_code_{country_code}"
@@ -56,11 +60,11 @@ def predict_startup(data: StartupInput):
     # Fallback for unseen categories
     if market_col not in model_features:
         market_col = "market_Other"
-    
+
     if country_col not in model_features:
         country_col = "country_code_Other"
 
-    input_df[market_col] = True 
+    input_df[market_col] = True
     input_df[country_col] = True
 
     # Ensure all model features are present in the input DataFrame
@@ -75,11 +79,29 @@ def predict_startup(data: StartupInput):
     probability = model.predict_proba(input_df)[0][1]
     prediction = model.predict(input_df)[0]
 
+    predicted_class = int(prediction)
+    prediction_label = "Success" if predicted_class == 1 else "Failure"
+
+    # Save prediction log to Supabase
+    log_data = {
+        "user_id": "demo-founder-001",
+        **original_input,
+        "success_probability": round(float(probability), 4),
+        "predicted_class": predicted_class,
+        "prediction_label": prediction_label,
+    }
+
+    try:
+        save_prediction_log(log_data)
+    except Exception as error:
+        # Do not fail the prediction if logging fails
+        print(f"Failed to save prediction log: {error}")
+
     # Return the prediction results
     return {
         "success_probability": round(float(probability), 4),
         "success_percentage": f"{probability:.2%}",
-        "prediction": "Success" if prediction == 1 else "Failure"
+        "prediction": prediction_label
     }
 
 # Endpoint for chat interactions
