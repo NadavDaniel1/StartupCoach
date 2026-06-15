@@ -5,9 +5,22 @@ import pandas as pd
 
 from rag.generate_answer import generate_answer
 from backend.supabase_client import save_prediction_log
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize FastAPI application
 app = FastAPI(title="StartupCoach API", description="API for predicting startup success based on funding data.")
+
+# Configure CORS to allow requests from the frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load the trained model and feature list
 model = joblib.load("models/startup_success_model.pkl")
