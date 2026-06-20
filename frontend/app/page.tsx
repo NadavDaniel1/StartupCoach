@@ -15,6 +15,7 @@ import {
   Rocket,
   Sparkles,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 
 type PredictionResult = {
@@ -60,7 +61,6 @@ type PredictionHistoryItem = {
   prediction_label?: string;
 };
 
-const backendUrl = "http://127.0.0.1:8000";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -129,7 +129,7 @@ export default function Home() {
 
   const fetchPredictionHistory = async () => {
     try {
-      const response = await fetch(`${backendUrl}/history`);
+      const response = await fetch("http://127.0.0.1:8000/history");
 
       if (!response.ok) {
         console.warn("History endpoint returned:", response.status);
@@ -161,7 +161,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${backendUrl}/chat`, {
+      const response = await fetch("http://127.0.0.1:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: currentMessage }),
@@ -195,7 +195,7 @@ export default function Home() {
     setPredictionLoading(true);
 
     try {
-      const response = await fetch(`${backendUrl}/predict`, {
+      const response = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(startupForm),
@@ -213,6 +213,28 @@ export default function Home() {
       alert("Prediction error. Please make sure the backend is running.");
     } finally {
       setPredictionLoading(false);
+    }
+  };
+
+  const deletePrediction = async (predictionId: number) => {
+    const shouldDelete = window.confirm("Delete this prediction from history?");
+    if (!shouldDelete) return;
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/history/${predictionId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delete request failed: ${response.status}`);
+      }
+
+      setPredictionHistory((prev) =>
+        prev.filter((item) => item.id !== predictionId)
+      );
+    } catch (error) {
+      console.error("Delete prediction error:", error);
+      alert("Could not delete prediction. Please make sure the backend is running.");
     }
   };
 
@@ -527,9 +549,20 @@ export default function Home() {
                           </p>
                         </div>
 
-                        <span className={`rounded-full px-4 py-2 font-semibold ${getPredictionColor(score)}`}>
-                          {roundedScore}% {item.prediction_label || (item.predicted_class === 1 ? "Success" : "Failure")}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className={`rounded-full px-4 py-2 font-semibold ${getPredictionColor(score)}`}>
+                            {roundedScore}% {item.prediction_label || (item.predicted_class === 1 ? "Success" : "Failure")}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => deletePrediction(item.id)}
+                            className="rounded-full p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                            title="Delete prediction"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
