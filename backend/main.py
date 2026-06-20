@@ -4,7 +4,11 @@ import joblib
 import pandas as pd
 
 from rag.generate_answer import generate_answer
-from backend.supabase_client import save_prediction_log
+from backend.supabase_client import (
+    save_prediction_log,
+    get_prediction_history,
+    delete_prediction_log,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize FastAPI application
@@ -28,6 +32,7 @@ model_features = joblib.load("models/model_features.pkl")
 
 # Define input data model for prediction
 class StartupInput(BaseModel):
+    startup_name: str = ""
     funding_total_usd: float
     funding_rounds: float
     founded_year: float
@@ -97,6 +102,7 @@ def predict_startup(data: StartupInput):
 
     # Save prediction log to Supabase
     log_data = {
+        "startup_name": original_input.get("startup_name", ""),
         "user_id": "demo-founder-001",
         **original_input,
         "success_probability": round(float(probability), 4),
@@ -136,3 +142,12 @@ def chat(data: ChatInput):
             "error": str(error),
             "homework": []
         }
+    
+@app.get("/history")
+def get_history():
+    return get_prediction_history()
+
+
+@app.delete("/history/{prediction_id}")
+def delete_history_item(prediction_id: int):
+    return delete_prediction_log(prediction_id)

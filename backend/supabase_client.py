@@ -22,3 +22,26 @@ def save_prediction_log(log_data: dict):
     )
 
     return response
+
+def get_prediction_history():
+    response = (
+        supabase
+        .table("prediction_logs")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return response.data
+
+
+def delete_prediction_log(prediction_id: int):
+    response = (
+        supabase
+        .table("prediction_logs")
+        .delete()
+        .eq("id", prediction_id)
+        .execute()
+    )
+
+    return response

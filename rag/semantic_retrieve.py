@@ -21,8 +21,8 @@ def semantic_retrieve(query: str, top_k: int = 3):
     with open(EMBEDDINGS_PATH, "r", encoding="utf-8") as file:
         embedded_chunks = json.load(file)
 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    query_embedding = model.encode(query).tolist()
+    model = SentenceTransformer("intfloat/multilingual-e5-base")
+    query_embedding = model.encode(f"query: {query}").tolist()
 
     scored_chunks = []
 
@@ -37,6 +37,7 @@ def semantic_retrieve(query: str, top_k: int = 3):
 
 if __name__ == "__main__":
     query = "How can I know if users really need my product?"
+    
 
     results = semantic_retrieve(query)
 
@@ -46,3 +47,4 @@ if __name__ == "__main__":
     for score, chunk in results:
         print(f"\nScore: {score:.4f}")
         print(chunk)
+

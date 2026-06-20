@@ -9,5 +9,6 @@ __pycache__/
 
 rag/books/
 rag/chunks/
+rag/knowledge/
 
 venv/
