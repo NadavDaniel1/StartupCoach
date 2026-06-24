@@ -13,12 +13,20 @@ client = OpenAI(
 )
 
 
-def generate_answer(question: str) -> str:
+def generate_answer(question: str, prediction: dict | None = None, startup: dict | None = None) -> str:
     """
     Generate startup advice using RAG context and OpenAI.
     """
 
     context = build_context(question)
+
+    prediction_context = "No prediction available."
+    if prediction:
+        prediction_context = (
+            f"Success probability: {prediction.get('success_probability')}\n"
+            f"Prediction: {prediction.get('prediction')}\n"
+            f"Success percentage: {prediction.get('success_percentage')}"
+        )
 
     prompt = f"""
 You are StartupCoach, an experienced startup mentor for early-stage founders.
@@ -27,6 +35,13 @@ Your mission is not to impress the founder with theory.
 Your mission is to help the founder make better business decisions and take meaningful action.
 
 Use only the business knowledge provided below.
+
+Current Startup Prediction:
+{prediction_context}
+
+Use this prediction only as supporting context.
+Do not treat it as certainty.
+Explain that it is a model-based estimate when relevant.
 
 If the knowledge base does not contain enough information, provide the best practical advice you can, but clearly avoid inventing unsupported frameworks.
 

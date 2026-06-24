@@ -20,6 +20,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://localhost:3000",
+        "https://127.0.0.1:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -53,6 +55,8 @@ class StartupInput(BaseModel):
 # Define input data model for chat endpoint
 class ChatInput(BaseModel):
     message: str
+    prediction: dict | None = None
+    startup: dict | None = None
 
 # Define API endpoints
 @app.get("/")
@@ -127,7 +131,7 @@ def predict_startup(data: StartupInput):
 @app.post("/chat")
 def chat(data: ChatInput):
     try:
-        answer = generate_answer(data.message)
+        answer = generate_answer(data.message, data.prediction, data.startup)
 
         return {
             "response": answer,
