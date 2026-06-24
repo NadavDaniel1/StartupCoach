@@ -64,13 +64,9 @@ type PredictionHistoryItem = {
 
 const initialMessages: ChatMessage[] = [
   {
-    role: "user",
-    content: "How do I know if customers really need my product?",
-  },
-  {
     role: "assistant",
     content:
-      "Start by interviewing potential customers before building. Focus on understanding their current pain, then validate demand with a simple version of the product.",
+      "Hi, I’m StartupCoach. Ask me about validation, MVP, growth, pricing, fundraising, or how to improve your startup based on the prediction results.",
   },
 ];
 
@@ -164,7 +160,11 @@ export default function Home() {
       const response = await fetch("http://127.0.0.1:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentMessage }),
+        body: JSON.stringify({
+          message: currentMessage,
+          prediction: predictionResult,
+          startup: startupForm,
+        }),
       });
 
       if (!response.ok) {
